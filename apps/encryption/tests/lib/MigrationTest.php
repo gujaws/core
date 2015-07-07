@@ -253,13 +253,13 @@ class MigrationTest extends \Test\TestCase {
 		/** @var \OCP\IDBConnection $connection */
 		$connection = \OC::$server->getDatabaseConnection();
 		$query = $connection->getQueryBuilder();
-		$query->delete('`*PREFIX*appconfig`')
-			->where($query->expr()->eq('`appid`', ':appid'))
+		$query->delete('*PREFIX*appconfig')
+			->where($query->expr()->eq('appid', $query->createParameter('appid')))
 			->setParameter('appid', 'encryption');
 		$query->execute();
 		$query = $connection->getQueryBuilder();
-		$query->delete('`*PREFIX*preferences`')
-			->where($query->expr()->eq('`appid`', ':appid'))
+		$query->delete('*PREFIX*preferences')
+			->where($query->expr()->eq('appid', $query->createParameter('appid')))
 			->setParameter('appid', 'encryption');
 		$query->execute();
 	}
@@ -270,10 +270,10 @@ class MigrationTest extends \Test\TestCase {
 		$m = new Migration(\OC::$server->getConfig(), new \OC\Files\View(), \OC::$server->getDatabaseConnection());
 		$m->updateDB();
 
-		$this->verifyDB('`*PREFIX*appconfig`', 'files_encryption', 0);
-		$this->verifyDB('`*PREFIX*preferences`', 'files_encryption', 0);
-		$this->verifyDB('`*PREFIX*appconfig`', 'encryption', 3);
-		$this->verifyDB('`*PREFIX*preferences`', 'encryption', 1);
+		$this->verifyDB('*PREFIX*appconfig', 'files_encryption', 0);
+		$this->verifyDB('*PREFIX*preferences', 'files_encryption', 0);
+		$this->verifyDB('*PREFIX*appconfig', 'encryption', 3);
+		$this->verifyDB('*PREFIX*preferences', 'encryption', 1);
 
 	}
 
@@ -289,20 +289,20 @@ class MigrationTest extends \Test\TestCase {
 		$m = new Migration(\OC::$server->getConfig(), new \OC\Files\View(), \OC::$server->getDatabaseConnection());
 		$m->updateDB();
 
-		$this->verifyDB('`*PREFIX*appconfig`', 'files_encryption', 0);
-		$this->verifyDB('`*PREFIX*preferences`', 'files_encryption', 0);
-		$this->verifyDB('`*PREFIX*appconfig`', 'encryption', 3);
-		$this->verifyDB('`*PREFIX*preferences`', 'encryption', 1);
+		$this->verifyDB('*PREFIX*appconfig', 'files_encryption', 0);
+		$this->verifyDB('*PREFIX*preferences', 'files_encryption', 0);
+		$this->verifyDB('*PREFIX*appconfig', 'encryption', 3);
+		$this->verifyDB('*PREFIX*preferences', 'encryption', 1);
 
 		// check if the existing values where overwritten correctly
 		/** @var \OC\DB\Connection $connection */
 		$connection = \OC::$server->getDatabaseConnection();
-		$query = $connection->createQueryBuilder();
-		$query->select('`configvalue`')
-			->from('`*PREFIX*appconfig`')
+		$query = $connection->getQueryBuilder();
+		$query->select('configvalue')
+			->from('*PREFIX*appconfig')
 			->where($query->expr()->andX(
-				$query->expr()->eq('`appid`', ':appid'),
-				$query->expr()->eq('`configkey`', ':configkey')
+				$query->expr()->eq('appid', $query->createParameter('appid')),
+				$query->expr()->eq('configkey', $query->createParameter('configkey'))
 			))
 			->setParameter('appid', 'encryption')
 			->setParameter('configkey', 'publicShareKeyId');
@@ -311,13 +311,13 @@ class MigrationTest extends \Test\TestCase {
 		$this->assertTrue(isset($value['configvalue']));
 		$this->assertSame('share_id', $value['configvalue']);
 
-		$query = $connection->createQueryBuilder();
-		$query->select('`configvalue`')
-			->from('`*PREFIX*preferences`')
+		$query = $connection->getQueryBuilder();
+		$query->select('configvalue')
+			->from('*PREFIX*preferences')
 			->where($query->expr()->andX(
-				$query->expr()->eq('`appid`', ':appid'),
-				$query->expr()->eq('`configkey`', ':configkey'),
-				$query->expr()->eq('`userid`', ':userid')
+				$query->expr()->eq('appid', $query->createParameter('appid')),
+				$query->expr()->eq('configkey', $query->createParameter('configkey')),
+				$query->expr()->eq('userid', $query->createParameter('userid'))
 			))
 			->setParameter('appid', 'encryption')
 			->setParameter('configkey', 'recoverKeyEnabled')
@@ -333,9 +333,9 @@ class MigrationTest extends \Test\TestCase {
 		/** @var \OCP\IDBConnection $connection */
 		$connection = \OC::$server->getDatabaseConnection();
 		$query = $connection->getQueryBuilder();
-		$query->select('`appid`')
+		$query->select('appid')
 			->from($table)
-			->where($query->expr()->eq('`appid`', ':appid'))
+			->where($query->expr()->eq('appid', $query->createParameter('appid')))
 			->setParameter('appid', $appid);
 		$result = $query->execute();
 		$values = $result->fetchAll();
@@ -358,7 +358,7 @@ class MigrationTest extends \Test\TestCase {
 		$connection = \OC::$server->getDatabaseConnection();
 		$query = $connection->getQueryBuilder();
 		$query->select('*')
-			->from('`*PREFIX*filecache`');
+			->from('*PREFIX*filecache');
 		$result = $query->execute();
 		$entries = $result->fetchAll();
 		foreach($entries as $entry) {
@@ -376,22 +376,22 @@ class MigrationTest extends \Test\TestCase {
 		/** @var \OCP\IDBConnection $connection */
 		$connection = \OC::$server->getDatabaseConnection();
 		$query = $connection->getQueryBuilder();
-		$query->delete('`*PREFIX*filecache`');
+		$query->delete('*PREFIX*filecache');
 		$query->execute();
 		$query = $connection->getQueryBuilder();
-		$result = $query->select('`fileid`')
-			->from('`*PREFIX*filecache`')
+		$result = $query->select('fileid')
+			->from('*PREFIX*filecache')
 			->setMaxResults(1)->execute()->fetchAll();
 		$this->assertEmpty($result);
 		$query = $connection->getQueryBuilder();
-		$query->insert('`*PREFIX*filecache`')
+		$query->insert('*PREFIX*filecache')
 			->values(
 				array(
-					'`storage`' => ':storage',
-					'`path_hash`' => ':path_hash',
-					'`encrypted`' => ':encrypted',
-					'`size`' => ':size',
-					'`unencrypted_size`' => ':unencrypted_size'
+					'storage' => $query->createParameter('storage'),
+					'path_hash' => $query->createParameter('path_hash'),
+					'encrypted' => $query->createParameter('encrypted'),
+					'size' => $query->createParameter('size'),
+					'unencrypted_size' => $query->createParameter('unencrypted_size'),
 				)
 			);
 		for ($i = 1; $i < 20; $i++) {
@@ -405,8 +405,8 @@ class MigrationTest extends \Test\TestCase {
 			);
 		}
 		$query = $connection->getQueryBuilder();
-		$result = $query->select('`fileid`')
-			->from('`*PREFIX*filecache`')
+		$result = $query->select('fileid')
+			->from('*PREFIX*filecache')
 			->execute()->fetchAll();
 		$this->assertSame(19, count($result));
 	}
