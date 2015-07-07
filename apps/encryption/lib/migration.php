@@ -61,9 +61,9 @@ class Migration {
 	 */
 	private function updateFileCache() {
 		$query = $this->connection->getQueryBuilder();
-		$query->update('`*PREFIX*filecache`')
-			->set('`size`', '`unencrypted_size`')
-			->where($query->expr()->eq('`encrypted`', ':encrypted'))
+		$query->update('*PREFIX*filecache')
+			->set('size', 'unencrypted_size')
+			->where($query->expr()->eq('encrypted', $query->createParameter('encrypted')))
 			->setParameter('encrypted', 1);
 		$query->execute();
 	}
@@ -145,8 +145,8 @@ class Migration {
 
 		$oldAppValues = $this->connection->getQueryBuilder();
 		$oldAppValues->select('*')
-			->from('`*PREFIX*appconfig`')
-			->where($oldAppValues->expr()->eq('`appid`', ':appid'))
+			->from('*PREFIX*appconfig')
+			->where($oldAppValues->expr()->eq('appid', $oldAppValues->createParameter('appid')))
 			->setParameter('appid', 'files_encryption');
 		$appSettings = $oldAppValues->execute();
 
@@ -160,8 +160,8 @@ class Migration {
 
 		$oldPreferences = $this->connection->getQueryBuilder();
 		$oldPreferences->select('*')
-			->from('`*PREFIX*preferences`')
-			->where($oldPreferences->expr()->eq('`appid`', ':appid'))
+			->from('*PREFIX*preferences')
+			->where($oldPreferences->expr()->eq('appid', $oldPreferences->createParameter('appid')))
 			->setParameter('appid', 'files_encryption');
 		$preferenceSettings = $oldPreferences->execute();
 
