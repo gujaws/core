@@ -18,6 +18,8 @@
 	var FileActions = function() {
 		this.initialize();
 	};
+	FileActions.TYPE_DROPDOWN = 0;
+	FileActions.TYPE_INLINE = 1;
 	FileActions.prototype = {
 		/** @lends FileActions.prototype */
 		actions: {},
@@ -111,6 +113,7 @@
 				displayName: displayName || name
 			});
 		},
+
 		/**
 		 * Register action
 		 *
@@ -125,7 +128,8 @@
 				displayName: action.displayName,
 				mime: mime,
 				icon: action.icon,
-				permissions: action.permissions
+				permissions: action.permissions,
+				type: action.type || FileActions.TYPE_DROPDOWN
 			};
 			if (_.isUndefined(action.displayName)) {
 				actionSpec.displayName = t('files', name);
@@ -305,6 +309,7 @@
 			$container.append($actionLink);
 			return $actionLink;
 		},
+
 		/**
 		 * Renders the action element by calling actionSpec.render() and
 		 * registers the click event to process the action.
@@ -314,7 +319,20 @@
 		 * false otherwise
 		 * @param {OCAFiles.FileActionContext} context rendering context
 		 */
-		_renderAction: function(actionSpec, isDefault, context) {
+		_renderDropDownAction: function(actionSpec) {
+			// TODO
+		},
+
+		/**
+		 * Renders the action element by calling actionSpec.render() and
+		 * registers the click event to process the action.
+		 *
+		 * @param {OCA.Files.FileAction} actionSpec file action to render
+		 * @param {boolean} isDefault true if the action is a default action,
+		 * false otherwise
+		 * @param {OCAFiles.FileActionContext} context rendering context
+		 */
+		_renderInlineAction: function(actionSpec, isDefault, context) {
 			var $actionEl = actionSpec.render(actionSpec, isDefault, context);
 			if (!$actionEl || !$actionEl.length) {
 				return;
@@ -383,8 +401,8 @@
 			);
 
 			$.each(actions, function (name, actionSpec) {
-				if (name !== 'Share') {
-					self._renderAction(
+				if (actionSpec.type === FileActions.TYPE_INLINE) {
+					self._renderInlineAction(
 						actionSpec,
 						actionSpec.action === defaultAction, {
 							$file: $tr,
@@ -392,20 +410,14 @@
 							fileList : fileList
 						}
 					);
+				} else {
+					self._renderDropDownAction(
+						actionSpec
+					);
 				}
 			});
-			// added here to make sure it's always the last action
-			var shareActionSpec = actions.Share;
-			if (shareActionSpec){
-				this._renderAction(
-					shareActionSpec,
-					shareActionSpec.action === defaultAction, {
-						$file: $tr,
-						fileActions: this,
-						fileList: fileList
-					}
-				);
-			}
+
+			// TODO: render dropdown button
 
 			if (triggerEvent){
 				fileList.$fileList.trigger(jQuery.Event("fileActionsReady", {fileList: fileList, $files: $tr}));
